@@ -1,5 +1,5 @@
 
-from PdfReader import PdfReader
+from PdfTextParser import PdfTextParser
 import os
 import mmap
 
@@ -37,10 +37,8 @@ def main():
     # with open('c:/11.pdf', 'r') as file:
     #         n = file.fileno()
     
-    with PdfTextParser('c:/11.pdf') as PdfTextParser:
-        startxref = PdfTextParser.GetStartXRef()
-        PdfTextParser.GetTrailer()
-
+    with PdfTextParser('c:/minimal.pdf') as pdftextparser:
+        pdftextparser.Parse()
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,7 @@
 import os
 import mmap
 import errno
+from XrefParser import XrefParser
 
 
 class PdfTextParser():
@@ -23,7 +24,7 @@ class PdfTextParser():
             FileNotFoundError: if pdf file not found
         
         Returns:
-            PdfReader
+            PdfTextParser
 
         """        
         
@@ -33,42 +34,16 @@ class PdfTextParser():
         self.pdffile = open(self.pdffilename, 'r+b')
         self.mm_pdf = mmap.mmap(self.pdffile.fileno(), 0)
         print(self.mm_pdf.readline())
+        self.xrefparser = XrefParser(self.mm_pdf)     
         return self
 
 
-    
-    def GetStartXRef(self):               
-        """
-        Return xref offset
-        
-        Returns:
-            int -- xref offset
-        """        
-        startxref_str = b'startxref'
-        eof = self.mm_pdf.rfind(b'%%EOF') 
-        startxref = self.mm_pdf.rfind(startxref_str) 
-        offset =  self.mm_pdf[startxref+len(startxref_str):eof]
-        self.xref_offset = int(offset.decode("utf-8").strip())
-        print(self.xref_offset)
-        return self.xref_offset
+    def Parse(self):
+       
+       self.xrefparser.GetStartXRef()
+       self.xrefparser.ParseXrefTable()
+       self.xrefparser.ParseSubXrefTable()
 
-    def  GetTrailer(self):
-        """
-        Return pdf trailer 
-        """                 
-        self.mm_pdf.seek(self.xref_offset)
-        xrefobj = self.mm_pdf.readline()
-        # if xrefobj.strip() == b'xref':
-        #     print('xref')
-        # else:
-        #      print('xrefStrm')
-
-        # check xref or xref stream object
-        n = xrefobj.find(b'obj')
-        if n > -1:
-            print('xref')
-        else:
-            print('xrefStrm')
 
     def __exit__(self, *args):
         self.mm_pdf.close()

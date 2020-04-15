@@ -1,6 +1,6 @@
 
 import mmap
-import PdfName
+from PdfName import PdfName
 
 class XrefParser():
 
@@ -11,6 +11,8 @@ class XrefParser():
     def __init__(self, mm_pdf):
         self.mm_pdf = mm_pdf
 
+    def __enter__(self):
+        return self
 
     def GetStartXRef(self):               
         """
@@ -40,9 +42,9 @@ class XrefParser():
         # check xref or xref stream object
         n = xrefobj.find(PdfName.OBJ)
         if n > -1:
-            print('xref')
-        else:
             print('xrefStrm')
+        else:
+            print('xref')
 
 
 
@@ -57,17 +59,18 @@ class XrefParser():
 
         """
         line = self.mm_pdf.readline()
-        line.strip()
+        line = line.decode("utf-8").strip()
 
-        i = int(line[1])
+        i = int(line[0])
         n = int(line[-1])
 
         while i < n:
             line = self.mm_pdf.readline()
-            line.strip()
+            line = line.decode("utf-8").strip()
             if line[-1] == 'f':
+                i+=1
                 continue
-            value = int(line[10])
+            value = int(line[:10])
             self.PdfObjects_Offsets[i] = value
             i+=1
 
