@@ -42,8 +42,7 @@ class PdfTextParser():
        
        self.xrefparser.GetStartXRef()
        self.xrefparser.ParseXrefTable()
-       self.xrefparser.ParseSubXrefTable()
-
+ 
 
     def __exit__(self, *args):
         self.mm_pdf.close()

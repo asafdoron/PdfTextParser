@@ -2,6 +2,7 @@
 from PdfTextParser import PdfTextParser
 import os
 import mmap
+import traceback
 
 def main():
 
@@ -41,4 +42,8 @@ def main():
         pdftextparser.Parse()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+         traceback.print_exc()
+    

@@ -7,12 +7,15 @@ class XrefParser():
 
     PdfObjects_Offsets = {}
 
+    # @property
+    # def PdfObjects_Offsets(self):
+    #     return self.__PdfObjects_Offsets
 
     def __init__(self, mm_pdf):
         self.mm_pdf = mm_pdf
 
-    def __enter__(self):
-        return self
+    # def __enter__(self):
+    #     return self
 
     def GetStartXRef(self):               
         """
@@ -40,12 +43,30 @@ class XrefParser():
         #      print('xrefStrm')
 
         # check xref or xref stream object
-        n = xrefobj.find(PdfName.OBJ)
-        if n > -1:
+        idx = xrefobj.find(PdfName.OBJ)
+        if idx > -1:
             print('xrefStrm')
+            raise Exception('PDF Not Supported')
         else:
             print('xref')
 
+
+        self.bFoundPrevTrailer = False
+
+        while self.bFoundPrevTrailer == False:
+            self.ParseSubXrefTable()
+            
+            # check if xref ended
+            pos = self.mm_pdf.tell()
+            line = self.mm_pdf.readline()
+            #line = line.decode("utf-8")
+            idx = line.find(PdfName.TRAILER)
+            #idx = line.find('trailer')
+            if idx > -1:
+                #found trailer
+                self.ParseTrailer()
+            else:
+                self.mm_pdf.seek(pos)
 
 
     def ParseSubXrefTable(self):
@@ -71,11 +92,23 @@ class XrefParser():
                 i+=1
                 continue
             value = int(line[:10])
-            self.PdfObjects_Offsets[i] = value
+            if i not in self.PdfObjects_Offsets:
+                self.PdfObjects_Offsets[i] = value
             i+=1
 
     def  ParseTrailer(self):
         """
-        Return pdf trailer 
+        Parse pdf trailer 
+        <<  /Root 1 0 R\n      /Size 5\n  >>
         """                 
-        pass
+        idx = self.mm_pdf.find(PdfName.GREATER_THAN) 
+        trailer = self.mm_pdf[:idx]
+
+        idx = trailer.find(PdfName.PREV)
+            #idx = line.find('trailer')
+        if idx > -1:
+            self.bFoundPrevTrailer = True
+        else:
+            self.bFoundPrevTrailer = False
+
+        
