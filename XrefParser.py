@@ -6,6 +6,7 @@ class XrefParser():
 
 
     PdfObjects_Offsets = {}
+    Root_Offset = None
 
     # @property
     # def PdfObjects_Offsets(self):
@@ -34,26 +35,27 @@ class XrefParser():
 
 
     def  ParseXrefTable(self):    
-        
-        self.mm_pdf.seek(self.xref_offset)
-        xrefobj = self.mm_pdf.readline()
-        # if xrefobj.strip() == b'xref':
-        #     print('xref')
-        # else:
-        #      print('xrefStrm')
 
-        # check xref or xref stream object
-        idx = xrefobj.find(PdfName.OBJ)
-        if idx > -1:
-            print('xrefStrm')
-            raise Exception('PDF Not Supported')
-        else:
-            print('xref')
+        self.bFoundPrevTrailer = True
+
+        while self.bFoundPrevTrailer == True:
+
+            self.mm_pdf.seek(self.xref_offset)
+            xrefobj = self.mm_pdf.readline()
+            # if xrefobj.strip() == b'xref':
+            #     print('xref')
+            # else:
+            #      print('xrefStrm')
+
+            # check xref or xref stream object
+            idx = xrefobj.find(PdfName.OBJ)
+            if idx > -1:
+                print('xrefStrm')
+                raise Exception('PDF Not Supported')
+            else:
+                print('xref')
 
 
-        self.bFoundPrevTrailer = False
-
-        while self.bFoundPrevTrailer == False:
             self.ParseSubXrefTable()
             
             # check if xref ended
@@ -88,27 +90,51 @@ class XrefParser():
         while i < n:
             line = self.mm_pdf.readline()
             line = line.decode("utf-8").strip()
+            
+            # deleted object - offset = 0
             if line[-1] == 'f':
-                i+=1
-                continue
-            value = int(line[:10])
+                value = 0
+            else:    
+                value = int(line[:10])
+            
             if i not in self.PdfObjects_Offsets:
                 self.PdfObjects_Offsets[i] = value
+
             i+=1
 
     def  ParseTrailer(self):
         """
         Parse pdf trailer 
-        <<  /Root 1 0 R\n      /Size 5\n  >>
+        <<  /Root 1 0 R\n  /Size 5\n /Prev 1472 >>
         """                 
+        pos = self.mm_pdf.tell()
         idx = self.mm_pdf.find(PdfName.GREATER_THAN) 
-        trailer = self.mm_pdf[:idx]
+        trailer = self.mm_pdf[pos:idx+2]
 
+        # find prev xref offset
         idx = trailer.find(PdfName.PREV)
             #idx = line.find('trailer')
         if idx > -1:
             self.bFoundPrevTrailer = True
+            n1 = trailer.find(b'/',idx)
+            n2 = trailer.find(PdfName.GREATER_THAN,idx)
+            
+            if n1 == -1:
+                n = n2
+            elif n2 == -1:
+                n = n1
+            else:    
+                n = n1 if n1 < n2 else n2
+
         else:
             self.bFoundPrevTrailer = False
 
+
+        # find root object
+        idx = trailer.find(PdfName.ROOT)
         
+        n = trailer.find(b'R',idx+len(PdfName.ROOT))
+        
+        root_str = trailer[idx+len(PdfName.ROOT):n]
+        root_str = root_str.split()[0]
+        self.Root_Offset = int(root_str)
