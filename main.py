@@ -39,7 +39,7 @@ def main():
     #         n = file.fileno()
     
     with PdfTextParser('c:/minimal.pdf') as pdftextparser:
-        pdftextparser.Parse()
+        pdftextparser.ParseXref()
 
 if __name__ == "__main__":
     try:

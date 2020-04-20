@@ -1,16 +1,15 @@
 
 import mmap
 from PdfName import PdfName
+from PdfErrors import PdfErrors
+import PdfUtils
 
 class XrefParser():
 
 
     PdfObjects_Offsets = {}
-    Root_Offset = None
+    nRootIndObjNumber = None
 
-    # @property
-    # def PdfObjects_Offsets(self):
-    #     return self.__PdfObjects_Offsets
 
     def __init__(self, mm_pdf):
         self.mm_pdf = mm_pdf
@@ -51,10 +50,8 @@ class XrefParser():
             idx = xrefobj.find(PdfName.OBJ)
             if idx > -1:
                 print('xrefStrm')
-                raise Exception('PDF Not Supported')
-            else:
-                print('xref')
-
+                raise Exception(PdfErrors.XREFSRM_ERROR)
+           
 
             self.ParseSubXrefTable()
             
@@ -111,30 +108,37 @@ class XrefParser():
         idx = self.mm_pdf.find(PdfName.GREATER_THAN) 
         trailer = self.mm_pdf[pos:idx+2]
 
+        # check if the pdf is encrypted
+        idx = trailer.find(PdfName.ENCRYPT)
+            
+        if idx > -1:
+            raise Exception(PdfErrors.ENCRYPT_ERROR)
+        
+        trailer_str = trailer.decode("utf-8").strip()
+        
+
+        # find root object
+        self.nRootIndObjNumber = PdfUtils.GetIndirectPdfObject(PdfName.ROOT_STR, trailer_str)
+
         # find prev xref offset
         idx = trailer.find(PdfName.PREV)
-            #idx = line.find('trailer')
+            
         if idx > -1:
             self.bFoundPrevTrailer = True
-            n1 = trailer.find(b'/',idx)
-            n2 = trailer.find(PdfName.GREATER_THAN,idx)
+            # n1 = trailer.find(b'/',idx)
+            # n2 = trailer.find(PdfName.GREATER_THAN,idx)
             
-            if n1 == -1:
-                n = n2
-            elif n2 == -1:
-                n = n1
-            else:    
-                n = n1 if n1 < n2 else n2
+            # if n1 == -1:
+            #     n = n2
+            # elif n2 == -1:
+            #     n = n1
+            # else:    
+            #     n = n1 if n1 < n2 else n2
+
+            nPrev = PdfUtils.GetPdfNumber(PdfName.PREV_STR, trailer_str)
+            nSize = PdfUtils.GetPdfNumber(PdfName.SIZE_STR, trailer_str)
 
         else:
             self.bFoundPrevTrailer = False
 
-
-        # find root object
-        idx = trailer.find(PdfName.ROOT)
         
-        n = trailer.find(b'R',idx+len(PdfName.ROOT))
-        
-        root_str = trailer[idx+len(PdfName.ROOT):n]
-        root_str = root_str.split()[0]
-        self.Root_Offset = int(root_str)
