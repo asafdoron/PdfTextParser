@@ -3,15 +3,35 @@ import mmap
 
 from PdfName import PdfName
 
-
-def GetIndirectPdfArray(sIndirectPdfArray):
+def GetIndirectPdfArray(sPdfArrayToSearch, sPdfObject):
     """
     Return list of Indirect Objects
     
     Arguments:
-        sIndirectPdfArray {string} -- [3 0 R 11 0 R]
+        sPdfArrayToSearch {string} -- Kids
+        sPdfObject {string} -- '<< /Type /Pages\n /Kids [3 0 R 11 0 R]\n  /Count 1\n  /MediaBox [0 0 300 144]\n  >>'
     """    
     lIndObjs = []
+
+    #find 
+
+    idx = sPdfObject.find(sPdfArrayToSearch)
+    
+    if idx == -1:
+        return idx
+
+    n1 = sPdfObject.find('/',idx)
+    n2 = sPdfObject.find('>>',idx)
+    
+    if n1 == -1:
+        n = n2
+    elif n2 == -1:
+        n = n1
+    else:    
+        n = n1 if n1 < n2 else n2
+
+    sIndirectPdfArray = sPdfObject[idx+len(sPdfArrayToSearch):n]    
+    
     sIndirectPdfArray = sIndirectPdfArray.strip()
     # remove []
     sIndirectPdfArray = sIndirectPdfArray[1:-1]
@@ -41,7 +61,7 @@ def GetIndirectPdfObject(sPdfObjectToSearch, sPdfObject):
         sPdfObject {string} -- pdf object
         
         e.g
-        Root,    <<  /Root 1 0 R\n  /Size 5\n /Prev 1472 >>
+        'Root',    '<<  /Root 1 0 R\n  /Size 5\n /Prev 1472 >>'
         
     """        
     

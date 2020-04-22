@@ -79,12 +79,13 @@ class XrefParser():
 
         """
         line = self.mm_pdf.readline()
-        line = line.decode("utf-8").strip()
+        objectsNumbers = line.decode("utf-8").strip().split()
 
-        i = int(line[0])
-        n = int(line[-1])
+        objectNumber = int(objectsNumbers[0])
+        objectCounter = int(objectsNumbers[1])
 
-        while i < n:
+        objectsCount = objectNumber + objectCounter
+        while objectNumber < objectsCount:
             line = self.mm_pdf.readline()
             line = line.decode("utf-8").strip()
             
@@ -94,10 +95,10 @@ class XrefParser():
             else:    
                 value = int(line[:10])
             
-            if i not in self.PdfObjects_Offsets:
-                self.PdfObjects_Offsets[i] = value
+            if objectNumber not in self.PdfObjects_Offsets:
+                self.PdfObjects_Offsets[objectNumber] = value
 
-            i+=1
+            objectNumber+=1
 
     def  ParseTrailer(self):
         """
@@ -118,7 +119,9 @@ class XrefParser():
         
 
         # find root object
-        self.nRootIndObjNumber = PdfUtils.GetIndirectPdfObject(PdfName.ROOT_STR, trailer_str)
+        tmpRootIndObjNumber = PdfUtils.GetIndirectPdfObject(PdfName.ROOT_STR, trailer_str)
+        if tmpRootIndObjNumber != -1 and self.nRootIndObjNumber == None:
+            self.nRootIndObjNumber = tmpRootIndObjNumber
 
         # find prev xref offset
         idx = trailer.find(PdfName.PREV)
@@ -135,7 +138,9 @@ class XrefParser():
             # else:    
             #     n = n1 if n1 < n2 else n2
 
-            nPrev = PdfUtils.GetPdfNumber(PdfName.PREV_STR, trailer_str)
+            # prev xref
+            # nPrev = PdfUtils.GetPdfNumber(PdfName.PREV_STR, trailer_str)
+            self.xref_offset = PdfUtils.GetPdfNumber(PdfName.PREV_STR, trailer_str)
             nSize = PdfUtils.GetPdfNumber(PdfName.SIZE_STR, trailer_str)
 
         else:
