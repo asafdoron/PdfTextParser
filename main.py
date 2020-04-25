@@ -38,8 +38,9 @@ def main():
     # with open('c:/11.pdf', 'r') as file:
     #         n = file.fileno()
     
-    spdf = 'c:/DigitalSignatureAPIRef.pdf'
+    # spdf = 'c:/DigitalSignatureAPIRef.pdf'
     # spdf = 'c:/minimal.pdf'
+    spdf = 'c:/ubi.pdf'
 
     with PdfTextParser(spdf) as pdftextparser:
         pdftextparser.ParseXref()

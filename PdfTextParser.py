@@ -97,11 +97,10 @@ class PdfTextParser():
             for p in lkids:
                 self.Pages_Objects[self.PageCounter] = p
                 self.PageCounter += 1
-            # return
+            
         else:
             for p in lkids:
                 Pages = PdfUtils.GetPdfObject(self.mm_pdf, self.PdfObjects_Offsets[p])
-                # return self.GetPagesList(Pages)
                 self.GetPagesList(Pages)
 
     def GetText(self):

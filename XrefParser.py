@@ -53,19 +53,34 @@ class XrefParser():
                 raise Exception(PdfErrors.XREFSRM_ERROR)
            
 
-            self.ParseSubXrefTable()
+            idx = -1
+            pos = None
+
+            while idx == -1:
+                pos = self.mm_pdf.tell()
+                line = self.mm_pdf.readline()
+                idx = line.find(PdfName.TRAILER)
+
+                
+                if idx == -1:
+                    self.mm_pdf.seek(pos)
+                    self.ParseSubXrefTable()
+                
+
+            self.mm_pdf.seek(pos)
+            self.ParseTrailer()    
             
-            # check if xref ended
-            pos = self.mm_pdf.tell()
-            line = self.mm_pdf.readline()
-            #line = line.decode("utf-8")
-            idx = line.find(PdfName.TRAILER)
-            #idx = line.find('trailer')
-            if idx > -1:
-                #found trailer
-                self.ParseTrailer()
-            else:
-                self.mm_pdf.seek(pos)
+            # # check if xref ended
+            # pos = self.mm_pdf.tell()
+            # line = self.mm_pdf.readline()
+            # #line = line.decode("utf-8")
+            # idx = line.find(PdfName.TRAILER)
+            # #idx = line.find('trailer')
+            # if idx > -1:
+            #     #found trailer
+            #     self.ParseTrailer()
+            # else:
+            #     self.mm_pdf.seek(pos)
 
 
     def ParseSubXrefTable(self):
